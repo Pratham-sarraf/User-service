@@ -227,24 +227,37 @@ app.get("/getProductArray",async(req,res)=>{
 
 app.post("/bulkUpload", async (req, res) => {
   try {
-    const { name, email, subject, message } = req.body;
+    // 1. Backend se hum bhej rahe hain: { data: [ ...array ] }
+    // Toh yahan humein 'data' extract karna padega
+    const { data } = req.body; 
 
-    const c = new contactUs({
-      name,
-      email,
-      subject,
-      message,
+    // 2. Validation: Check karo data array hai ya nahi
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      return res.status(400).send("Invalid Data: Expected an array of contacts.");
+    }
+
+    console.log(`📥 Receiving ${data.length} records...`);
+
+    // 3. BULK INSERT (Fastest Way) 🚀
+    // Loop laga ke save() mat karna, wo slow hota hai.
+    // Mongoose ka 'insertMany' use karo.
+    await contactUs.insertMany(data);
+
+    res.status(201).json({
+      success: true,
+      message: "ALL MESSAGES SENT SUCCESSFULLY",
+      count: data.length
     });
 
-    await c.save();
-
-    res.status(201).send("MESSAGE SENT SUCCESSFULLY");
   } catch (error) {
-    console.error(error);
-    res.status(500).send("Something went wrong");
+    console.error("Bulk Upload Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong in Microservice",
+      error: error.message
+    });
   }
 });
-
 
 
 // ✅ SERVER START
@@ -260,3 +273,4 @@ connectDB()
   .catch((err) => {
     console.log("❌ Server failed to start due to database error:", err);
   });
+
