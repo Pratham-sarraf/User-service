@@ -225,6 +225,27 @@ app.get("/getProductArray",async(req,res)=>{
   res.json(refined_product_ids);
 })
 
+app.post("/bulkUpload", async (req, res) => {
+  try {
+    const { name, email, subject, message } = req.body;
+
+    const c = new contactUs({
+      name,
+      email,
+      subject,
+      message,
+    });
+
+    await c.save();
+
+    res.status(201).send("MESSAGE SENT SUCCESSFULLY");
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Something went wrong");
+  }
+});
+
+
 
 // ✅ SERVER START
 
